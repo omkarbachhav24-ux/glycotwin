@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>GlycoTwin</title><style>
+@page { size: 338mm 190mm; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "IBM Plex Sans", system-ui, sans-serif;
+       background: #0b1618; color: #e9efec; }
+.slide { width: 338mm; height: 190mm; padding: 16mm 20mm 14mm; position: relative;
+         page-break-after: always; display: flex; flex-direction: column;
+         background: #0b1618; overflow: hidden; }
+.slide::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+                background: linear-gradient(90deg, #4fd1c5, #a3b4ff 60%, transparent); }
+.kicker { color: #4fd1c5; font-size: 9.5pt; letter-spacing: 0.05em; margin-bottom: 3mm; }
+h1 { font-size: 30pt; line-height: 1.12; margin: 6mm 0 0; max-width: 24ch; letter-spacing: -0.02em; }
+h2 { font-size: 21pt; margin: 0 0 7mm; letter-spacing: -0.015em; font-weight: 600; max-width: 30ch; }
+h3 { font-size: 11pt; margin: 0 0 2mm; color: #4fd1c5; font-weight: 600; }
+.body { font-size: 11pt; line-height: 1.6; color: #c4d4d2; flex: 1; }
+.body p { margin: 0 0 4mm; max-width: 95ch; }
+.body b { color: #e9efec; }
+ul, ol { margin: 0 0 4mm; padding-left: 6mm; }
+li { margin-bottom: 1.8mm; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12mm; }
+.q { color: #a3b4ff; font-size: 12.5pt; border-left: 2px solid #a3b4ff;
+     padding-left: 5mm; margin-top: 5mm; }
+.foot { color: #5f7d80; font-size: 8.5pt; border-top: 1px solid #1f3d42;
+        padding-top: 3mm; margin-top: 4mm; }
+.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5mm; margin: 0 0 6mm; }
+.card { background: #13262a; border: 1px solid #1f3d42; border-radius: 5px; padding: 4mm 5mm; }
+.card .k { color: #5f7d80; font-size: 8.5pt; }
+.card .v { font-size: 20pt; line-height: 1.15; margin: 1mm 0; }
+.card .n { color: #90aaab; font-size: 8.5pt; }
+.mono { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-bottom: 5mm; }
+th { text-align: left; color: #5f7d80; font-weight: 500; padding: 2.5mm 3mm;
+     border-bottom: 1px solid #2b565c; font-size: 9.5pt; }
+td { padding: 2.5mm 3mm; border-bottom: 1px solid rgba(31,61,66,.6);
+     font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; }
+td:first-child { font-family: "IBM Plex Sans", sans-serif; }
+.title { justify-content: center; }
+.brand { font-size: 13pt; color: #4fd1c5; letter-spacing: 0.08em; }
+.lede { font-size: 13pt; color: #c4d4d2; max-width: 70ch; margin: 7mm 0 0; line-height: 1.55; }
+.warn { margin-top: 9mm; background: #2a1a12; border-left: 3px solid #ff7a59;
+        color: #ffd2b8; padding: 4mm 6mm; font-size: 10.5pt; max-width: 90ch; }
+.meta { margin-top: 7mm; color: #5f7d80; font-size: 9.5pt; }
+ol.flow li { margin-bottom: 2.4mm; }
+</style></head>
+<body>
+<section class="slide title">
+  <div class="brand">GlycoTwin</div>
+  <h1>An evolving patient digital twin for predictive diabetes management</h1>
+  <p class="lede">Forecasts glucose at 30, 60 and 120 minutes, estimates the chance of
+  crossing 180 mg/dL within the hour, and shows a clinician
+  what drove the estimate.</p>
+  <div class="warn">Research prototype on synthetic data. Not a medical device, not a
+  diagnostic tool, not a substitute for clinical care. No medication or dosing guidance.</div>
+  <div class="meta mono">glycotwin-0.1.0 &nbsp;&nbsp; trained 2026-10-23</div>
+</section>
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h2>Current monitoring looks backwards</h2>
+  <div class="body"><p>A glucose reading tells a clinician where a patient is now. It does not say
+    whether they are heading for an excursion, how fast, or why.</p>
+    <ul>
+      <li>Clinical records and wearable measurements sit in separate systems</li>
+      <li>A single reading carries no temporal context: rising fast or levelling off</li>
+      <li>Population thresholds miss what is normal for one individual</li>
+      <li>No unified place to ask what a change in behaviour would do to the outlook</li>
+    </ul>
+    <p class="q">Can historical clinical data and live physiological signals be combined
+    into an evolving twin that predicts a crossing before it happens, and explains itself?</p></div>
+  <div class="foot">competition.txt section 2</div>
+</section>
+<section class="slide">
+  <div class="kicker">What we built</div>
+  <h2>A twin that updates on every reading</h2>
+  <div class="body"><ol class="flow">
+      <li><b>Validate</b> units, range, duplicates, gaps, late and out of order arrival</li>
+      <li><b>Update</b> a rolling 4 hour window and the patient's twin state</li>
+      <li><b>Forecast</b> glucose at three horizons with an uncertainty band</li>
+      <li><b>Classify</b> the chance of crossing the threshold within 60 minutes</li>
+      <li><b>Explain</b> which features moved this particular prediction</li>
+      <li><b>Persist</b> the prediction with timestamp, model version and data quality</li>
+      <li><b>Push</b> the result to the console over a WebSocket</li>
+    </ol>
+    <p>Training and serving call the same feature engineering module, so what the model
+    was fitted on is what it sees in production.</p></div>
+  <div class="foot">competition.txt sections 5.3 and 7</div>
+</section>
+<section class="slide">
+  <div class="kicker">Data</div>
+  <h2>Synthetic by design, and said so plainly</h2>
+  <div class="body"><p>Candidate research datasets need signed data use agreements, so they cannot ship
+    in a public repository or be fetched during a build. GlycoTwin generates its cohort
+    instead, which makes the whole pipeline reproducible from a clean checkout.</p>
+    <div class="cards"><div class="card"><div class="k">Patients</div><div class="v mono">40</div><div class="n">14 days each</div></div><div class="card"><div class="k">Observations</div><div class="v mono">161,280</div><div class="n">5 minute sampling</div></div><div class="card"><div class="k">Mean glucose</div><div class="v mono">155</div><div class="n">mg/dL</div></div><div class="card"><div class="k">Above 180</div><div class="v mono">19.8%</div><div class="n">of all readings</div></div></div>
+    <p><b>The cost is real and we state it:</b> every metric in this deck measures how well
+    the model recovers a simulator written for this project, not human physiology. The brief
+    warns that Type 1 research data cannot establish validity for Indian Type 2 patients.
+    A synthetic cohort establishes even less.</p></div>
+  <div class="foot">competition.txt section 12</div>
+</section>
+<section class="slide">
+  <div class="kicker">Clinical target</div>
+  <h2>The target was fixed before training</h2>
+  <div class="body"><div class="cards"><div class="card"><div class="k">Threshold</div><div class="v mono">180</div><div class="n">mg/dL, top of time in range</div></div><div class="card"><div class="k">Event horizon</div><div class="v mono">60</div><div class="n">minutes</div></div><div class="card"><div class="k">Forecast</div><div class="v mono">30 / 60 / 120</div><div class="n">minutes ahead</div></div><div class="card"><div class="k">Event rate</div><div class="v mono">11.8%</div><div class="n">in the scored population</div></div></div>
+    <p>The decision that most affects the numbers: the event is scored <b>only on readings
+    at or below the threshold</b>. Scoring every reading would include ones already above it,
+    where the answer is close to trivial and the metrics flatter the model.</p>
+    <p>Low glucose is not predicted. The cohort holds too few readings below 70 mg/dL to
+    support a hypoglycaemia model, so none was trained.</p></div>
+  <div class="foot">competition.txt sections 4 and 13</div>
+</section>
+<section class="slide">
+  <div class="kicker">How it was evaluated</div>
+  <h2>Two protocols, and a baseline that has to be beaten</h2>
+  <div class="body"><div class="two">
+      <div>
+        <h3>Patient level holdout, primary</h3>
+        <p>40 patients split 26 / 6 / 8. Test patients appear in no part of training,
+        early stopping, calibration or threshold selection.</p>
+        <h3>Chronological holdout, secondary</h3>
+        <p>Retrained without the final 3 days, then scored on those days, so no future
+        reading leaks backwards.</p>
+      </div>
+      <div>
+        <h3>Baselines on identical rows</h3>
+        <ul>
+          <li><b>Persistence:</b> future glucose equals the latest reading</li>
+          <li><b>Ridge regression</b> on the same features</li>
+          <li><b>Slope extrapolation</b> for the event</li>
+        </ul>
+        <p>Glucose is strongly autocorrelated. A model that cannot beat persistence is
+        not doing anything, which is why it is reported beside every figure.</p>
+      </div>
+    </div></div>
+  <div class="foot">competition.txt section 6.3</div>
+</section>
+<section class="slide">
+  <div class="kicker">Results</div>
+  <h2>Forecast accuracy on patients the model never saw</h2>
+  <div class="body"><table><thead><tr><th>Horizon</th><th>MAE</th><th>RMSE</th><th>Persistence MAE</th><th>Ridge MAE</th><th>Gain over persistence</th></tr></thead><tbody><tr><td>30min</td><td>6.269</td><td>8.437</td><td>10.645</td><td>8.044</td><td>41.11%</td></tr><tr><td>60min</td><td>11.439</td><td>16.471</td><td>17.265</td><td>13.09</td><td>33.74%</td></tr><tr><td>120min</td><td>16.119</td><td>22.229</td><td>24.883</td><td>17.156</td><td>35.22%</td></tr></tbody></table><p>The chronological holdout agrees: 5.413,
+    10.142 and
+    14.422 mg/dL at the three horizons. Two
+    different ways of splitting the data give the same picture, so the gain is not an
+    artefact of one split.</p>
+    <p>Per patient MAE at 60 minutes ranges from
+    10.02 to
+    14.121 mg/dL. Pooled averages hide that
+    spread, so both are reported.</p></div>
+  <div class="foot">All figures from evaluation/metrics.json, written by the training run</div>
+</section>
+<section class="slide">
+  <div class="kicker">Results</div>
+  <h2>Catching a crossing before it happens</h2>
+  <div class="body"><table><thead><tr><th>Metric</th><th>Model</th><th>Slope baseline</th></tr></thead><tbody><tr><td>Precision</td><td>0.7951</td><td>0.4891</td></tr><tr><td>Recall (sensitivity)</td><td>0.5592</td><td>0.3476</td></tr><tr><td>Specificity</td><td>0.9806</td><td>0.9512</td></tr><tr><td>PR-AUC</td><td>0.7619</td><td>0.4237</td></tr><tr><td>ROC-AUC</td><td>0.9448</td><td>0.7729</td></tr><tr><td>Brier score</td><td>0.0527</td><td>0.0972</td></tr></tbody></table><p>Scored on 27,168 readings at or below the threshold, operating point
+    0.34 chosen on validation patients. Expected calibration error
+    0.0179, so a stated 70% means close to 70%
+    in practice.</p>
+    <p><b>Recall is 56%</b> at this operating point, so roughly four
+    crossings in nine are missed. The threshold is adjustable, and the next slide shows what
+    moving it costs.</p></div>
+  <div class="foot">Confusion matrix: 1800 TP, 464 FP, 1419 FN, 23485 TN</div>
+</section>
+<section class="slide">
+  <div class="kicker">The operating point</div>
+  <h2>Where the alert line goes is a clinical choice, not a metric</h2>
+  <div class="body"><p>The training run picks a default by F1 on validation patients. That is a
+    statistical default. It says nothing about whether a missed crossing or a false alarm
+    is worse, so the console hands the choice over and shows what it costs.</p>
+    <table><thead><tr><th>Threshold</th><th>Crossings caught</th><th>Alert episodes per patient per day</th><th>True alerts</th><th>Median warning</th></tr></thead><tbody><tr><td>0.1</td><td>88%</td><td>7.8</td><td>41%</td><td>25 min</td></tr><tr><td>0.2</td><td>68%</td><td>4.8</td><td>60%</td><td>25 min</td></tr><tr><td>0.35 (default)</td><td>56%</td><td>3.5</td><td>73%</td><td>25 min</td></tr><tr><td>0.5</td><td>50%</td><td>3.1</td><td>80%</td><td>30 min</td></tr><tr><td>0.8</td><td>36%</td><td>2.2</td><td>93%</td><td>25 min</td></tr></tbody></table>
+    <p>Burden is counted as <b>episodes</b>, not flagged readings. Readings arrive every
+    5 minutes, so one rising episode trips the threshold repeatedly; counting each firing
+    separately overstates what reaches a clinician by roughly six times. Firings within
+    60 minutes are treated as one alert.</p>
+    <p>Median warning time hardly moves across the range, so a lower threshold buys more
+    caught crossings rather than earlier ones. No setting is free, and nobody has yet asked
+    a clinician where the line belongs.</p></div>
+  <div class="foot">Measured over 112 held out patient days</div>
+</section>
+<section class="slide">
+  <div class="kicker">An honest result</div>
+  <h2>The uncertainty band does not fully deliver</h2>
+  <div class="body"><p>Intervals come from quantile regression at 0.10 and 0.90. On unseen patients the
+    raw quantiles covered well under the nominal 80%, so conformal calibration fitted on the
+    validation patients widens them.</p>
+    <table><thead><tr><th>Horizon</th><th>Raw quantile coverage</th><th>After conformal</th><th>Mean width</th></tr></thead><tbody><tr><td>30min</td><td>0.690</td><td>0.765</td><td>19.1 mg/dL</td></tr><tr><td>60min</td><td>0.654</td><td>0.758</td><td>30.4 mg/dL</td></tr><tr><td>120min</td><td>0.652</td><td>0.749</td><td>43.2 mg/dL</td></tr></tbody></table>
+    <p>Calibration helps but does not close the gap, because a previously unseen patient
+    breaks the exchangeability the conformal guarantee assumes. <b>Bands shown in the console
+    are narrower than they should be.</b> We report this rather than quoting the nominal 80%.</p></div>
+  <div class="foot">Romano, Patterson and Candes, Conformalized Quantile Regression, 2019</div>
+</section>
+<section class="slide">
+  <div class="kicker">The console</div>
+  <h2>What the clinician sees</h2>
+  <div class="body"><div class="two">
+      <div>
+        <ul>
+          <li>Measured readings and model output drawn as two separate series, never merged</li>
+          <li>Forecast curve with its uncertainty band and the threshold line</li>
+          <li>Risk panel in plain language, with projected crossing time</li>
+          <li>Per prediction feature contributions, raising and lowering</li>
+          <li>Data quality: gaps, stale readings, rejected values, late arrivals</li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li>Replay, simulate, pause, restart, with a speed control</li>
+          <li>Prediction history, every forecast the twin has produced</li>
+          <li>Twin timeline pairing past forecasts with what was later measured</li>
+          <li>Hypothetical scenarios, labelled hypothetical everywhere</li>
+          <li>A results page reading metrics.json as produced</li>
+        </ul>
+      </div>
+    </div>
+    <p>A persistent banner states what the system is not. Rejected readings are counted and
+    surfaced, never quietly replaced with an invented value.</p></div>
+  <div class="foot">competition.txt section 8</div>
+</section>
+<section class="slide">
+  <div class="kicker">What-if, carefully</div>
+  <h2>Scenarios show a model response, not a treatment effect</h2>
+  <div class="body"><p>Four scenarios re-run the model on a modified recent window: a brisk walk, a lighter
+    last meal, a later last meal, more sleep. Two guards sit on the feature.</p>
+    <ol>
+      <li><b>Magnitudes stay inside the range the cohort contains.</b> Gradient boosted trees
+      do not extrapolate, so an input pushed past the largest split the model learned produces
+      a number that stops responding and means nothing.</li>
+      <li><b>Every modified input is checked against the training distribution</b> and reported
+      as within range, extreme, or outside it. The console shows that check rather than
+      hiding it.</li>
+    </ol>
+    <p>Effects come out small, usually a few mg/dL, because recent glucose history dominates.
+    Activity and time of day also move together in this cohort, so the response to an activity
+    change reflects that association. We show the measured result and say what it is not.</p></div>
+  <div class="foot">competition.txt section 9</div>
+</section>
+<section class="slide">
+  <div class="kicker">Limitations</div>
+  <h2>What this prototype does not establish</h2>
+  <div class="body"><ol>
+      <li>The data is synthetic. Performance here predicts nothing about real CGM data.</li>
+      <li>No claim whatever about Indian Type 2 patients. No prospective validation, no
+      clinical review, no real population.</li>
+      <li>Prediction intervals under cover on unseen patients.</li>
+      <li>Recall is moderate at the default. It is adjustable, but no setting is free:
+      catching 88% of crossings costs about 8 alert episodes per patient per day, most of
+      them false.</li>
+      <li>Synthetic EHR demonstrates integration, not a realistic case mix.</li>
+      <li>Scenario outputs are associations learned from a generator, not causal effects.</li>
+      <li>No hypoglycaemia prediction.</li>
+      <li>Time to threshold is interpolated off the forecast curve, not a time to event model.</li>
+    </ol></div>
+  <div class="foot">Stated in full in README.md</div>
+</section>
+<section class="slide">
+  <div class="kicker">Future work</div>
+  <h2>Where it goes next</h2>
+  <div class="body"><div class="two">
+      <div>
+        <h3>Data</h3>
+        <ul>
+          <li>Repeat the evaluation on a licensed CGM dataset under a data use agreement</li>
+          <li>Prioritise a Type 2 cohort, and report the domain gap where one is used</li>
+          <li>Per patient calibration using only earlier observations</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Model and system</h3>
+        <ul>
+          <li>Close the interval coverage gap with per patient conformal calibration</li>
+          <li>Set the operating point with clinical input, using the measured burden</li>
+          <li>Drift detection as a patient's profile changes</li>
+          <li>An automated test suite, which this prototype does not have</li>
+        </ul>
+      </div>
+    </div>
+    <p class="q">A credible twin is one where the data, the predictions, the evolving state
+    and the evaluation hold together, and where the gaps are named.</p></div>
+  <div class="foot">competition.txt section 20</div>
+</section></body></html>

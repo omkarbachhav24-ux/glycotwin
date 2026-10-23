@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+.next/
+*.db
+.env
+# Generated data and artifacts. Reproduce with the commands in README.md.
+data/observations.csv.gz
+data/raw_stream.csv.gz
+data/meal_events.csv.gz
+model_artifacts/*.joblib

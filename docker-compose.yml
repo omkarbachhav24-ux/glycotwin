@@ -1,0 +1,58 @@
+# GlycoTwin, three services: Postgres, the FastAPI twin service, and the
+# Next.js console.
+#
+# Before the first `docker compose up`, generate the cohort and train the
+# models on the host so model_artifacts/ and evaluation/ exist:
+#   python data/generator/generate_cohort.py
+#   python -m ml.train
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: glycotwin
+      POSTGRES_PASSWORD: glycotwin
+      POSTGRES_DB: glycotwin
+    ports:
+      - "5432:5432"
+    volumes:
+      - glycotwin_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glycotwin -d glycotwin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      GLYCOTWIN_DATABASE_URL: postgresql+psycopg2://glycotwin:glycotwin@db:5432/glycotwin
+      GLYCOTWIN_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      GLYCOTWIN_DEFAULT_STREAM_INTERVAL_SECONDS: "1.0"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Retraining on the host is picked up on restart without rebuilding.
+      - ./model_artifacts:/app/model_artifacts:ro
+      - ./evaluation:/app/evaluation:ro
+      - ./data:/app/data:ro
+
+  console:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  glycotwin_pgdata:

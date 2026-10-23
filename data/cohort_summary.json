@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-10-23T11:47:35.848455+00:00",
+  "generator_version": "synthetic_generator_v1",
+  "seed": 20261023,
+  "patients": 40,
+  "days_per_patient": 14,
+  "sampling_interval_minutes": 5,
+  "total_observations": 161280,
+  "mean_glucose_mg_dl": 154.57,
+  "median_glucose_mg_dl": 152.4,
+  "share_above_180": 0.1981,
+  "share_below_70": 0.0005,
+  "per_patient_share_above_180": {
+    "min": 0.0,
+    "median": 0.1556,
+    "max": 0.7852
+  },
+  "meal_events": 2044,
+  "raw_stream_rows": 160046,
+  "raw_defect_counts": {
+    "": 158130,
+    "late_arrival": 1196,
+    "duplicate": 480,
+    "out_of_range": 240
+  }
+}

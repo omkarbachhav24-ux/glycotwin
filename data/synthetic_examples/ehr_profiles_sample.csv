@@ -1,0 +1,4 @@
+patient_id,age,sex,bmi,years_since_diagnosis,hba1c_percent,medication_category,comorbidities,baseline_fasting_glucose,insulin_sensitivity,carb_sensitivity,response_rate,meal_clearance_minutes,dawn_amplitude,sensor_noise_sd,data_source
+SYNTH-001,75,male,32.7,1.1,9.0,metformin_only,hypertension,163.9,1.017,1.121,0.3003,158.0,18.12,3.61,synthetic_generator_v1
+SYNTH-002,31,female,27.4,8.9,8.3,metformin_plus_su,hypertension,151.6,0.923,1.051,0.2416,147.6,17.35,2.66,synthetic_generator_v1
+SYNTH-003,51,male,34.5,2.2,7.6,metformin_plus_su,hypertension,129.6,0.789,0.81,0.2631,147.8,13.24,3.72,synthetic_generator_v1

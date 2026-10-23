@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GlycoTwin system architecture</title>
+<style>
+  @page { size: 297mm 210mm; margin: 0; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; width: 297mm; height: 210mm; display: flex; flex-direction: column;
+    background: #0b1618; color: #e9efec;
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    padding: 14mm 16mm;
+  }
+  header { display: flex; justify-content: space-between; align-items: baseline;
+           border-bottom: 1px solid #1f3d42; padding-bottom: 6mm; }
+  h1 { margin: 0; font-size: 20pt; font-weight: 600; letter-spacing: -0.01em; }
+  .sub { color: #5f7d80; font-size: 9pt; }
+  .note { color: #ffb48e; font-size: 8.5pt; }
+  .flow { margin-top: 5mm; }
+  .box { fill: #13262a; stroke: #2b565c; }
+  .box-accent { fill: #10262b; stroke: #4fd1c5; }
+  .box-store { fill: #15232e; stroke: #6f86c9; }
+  .t { fill: #e9efec; font-size: 10px; font-weight: 600; font-family: "IBM Plex Sans", sans-serif; }
+  .s { fill: #90aaab; font-size: 8.2px; font-family: "IBM Plex Sans", sans-serif; }
+  .lane { fill: #5f7d80; font-size: 8.5px; letter-spacing: 0.04em; }
+  .edge { stroke: #4e7a7e; stroke-width: 1.2; fill: none; marker-end: url(#a); }
+  .edge-live { stroke: #4fd1c5; stroke-width: 1.4; fill: none; marker-end: url(#b); stroke-dasharray: 5 3; }
+  .elabel { fill: #6f8f91; font-size: 7.4px; }
+  .lower { display: grid; grid-template-columns: 1fr 1.25fr; gap: 12mm; margin-top: 4mm;
+           border-top: 1px solid #1f3d42; padding-top: 3.5mm; }
+  .legend { display: flex; flex-direction: column; gap: 2.2mm; }
+  .lkey { display: flex; align-items: center; gap: 2.5mm; color: #90aaab; font-size: 7.6pt; }
+  .swatch { width: 30px; height: 10px; border-radius: 2px; display: inline-block; }
+  .swatch.accent { background: #10262b; border: 1px solid #4fd1c5; }
+  .swatch.store { background: #15232e; border: 1px solid #6f86c9; }
+  .ptitle { color: #e9efec; font-size: 8.4pt; font-weight: 600; margin-bottom: 1.8mm; }
+  .pipeline ol { margin: 0; padding-left: 4.5mm; color: #90aaab; font-size: 7.6pt; line-height: 1.45;
+                 columns: 2; column-gap: 8mm; }
+  footer { margin-top: auto; color: #5f7d80; font-size: 7.6pt;
+           border-top: 1px solid #1f3d42; padding-top: 3mm;
+           display: flex; justify-content: space-between; gap: 8mm; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>GlycoTwin system architecture</h1>
+    <div class="sub">Patient digital twin for glucose forecasting and excursion detection, Type 2 diabetes</div>
+  </div>
+  <div class="note">Research prototype. Synthetic data only. Not a medical device.</div>
+</header>
+
+<svg class="flow" width="980" height="417" viewBox="0 0 1010 430" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 z" fill="#4e7a7e"/>
+    </marker>
+    <marker id="b" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 z" fill="#4fd1c5"/>
+    </marker>
+  </defs>
+
+  <text class="lane" x="0" y="12">1. DATA SOURCES</text>
+  <text class="lane" x="214" y="12">2. INGESTION</text>
+  <text class="lane" x="420" y="12">3. TWIN STATE</text>
+  <text class="lane" x="626" y="12">4. PREDICTION</text>
+  <text class="lane" x="845" y="12">6. CONSOLE</text>
+
+  <!-- data sources -->
+  <rect class="box" x="0" y="30" width="180" height="52" rx="6"/>
+  <text class="t" x="14" y="51">Synthetic EHR profiles</text>
+  <text class="s" x="14" y="66">Age, HbA1c, medication category,</text>
+  <text class="s" x="14" y="76">comorbidity, fasting baseline</text>
+
+  <rect class="box" x="0" y="95" width="180" height="52" rx="6"/>
+  <text class="t" x="14" y="116">Simulated CGM series</text>
+  <text class="s" x="14" y="131">5 minute glucose, meals, dawn rise,</text>
+  <text class="s" x="14" y="141">activity effect, sensor noise</text>
+
+  <rect class="box" x="0" y="160" width="180" height="52" rx="6"/>
+  <text class="t" x="14" y="181">Wearable context</text>
+  <text class="s" x="14" y="196">Steps, heart rate, sleep duration,</text>
+  <text class="s" x="14" y="206">meal timing and carbohydrates</text>
+
+  <rect class="box" x="0" y="225" width="180" height="52" rx="6"/>
+  <text class="t" x="14" y="246">Raw stream with defects</text>
+  <text class="s" x="14" y="261">Dropouts, duplicates, out of range,</text>
+  <text class="s" x="14" y="271">late arrivals. This is what is replayed</text>
+
+  <!-- ingestion -->
+  <rect class="box-accent" x="214" y="60" width="172" height="118" rx="6"/>
+  <text class="t" x="228" y="81">Validation</text>
+  <text class="s" x="228" y="97">Units and physiological range</text>
+  <text class="s" x="228" y="109">Duplicate timestamps</text>
+  <text class="s" x="228" y="121">Out of order and late arrival</text>
+  <text class="s" x="228" y="133">Gap detection and freshness</text>
+  <text class="s" x="228" y="152">Rejected readings are counted,</text>
+  <text class="s" x="228" y="164">never imputed</text>
+
+  <rect class="box" x="214" y="196" width="172" height="58" rx="6"/>
+  <text class="t" x="228" y="217">Replay and simulation</text>
+  <text class="s" x="228" y="232">Timestamp ordered replay, or</text>
+  <text class="s" x="228" y="244">generated events with defects</text>
+
+  <!-- twin state -->
+  <rect class="box-accent" x="420" y="40" width="172" height="150" rx="6"/>
+  <text class="t" x="434" y="61">Digital twin state</text>
+  <text class="s" x="434" y="77">Rolling 4 hour window</text>
+  <text class="s" x="434" y="89">Lags, rate of change, rolling</text>
+  <text class="s" x="434" y="101">mean, SD, extrema</text>
+  <text class="s" x="434" y="113">Activity, sleep, meal context</text>
+  <text class="s" x="434" y="125">Patient baseline features</text>
+  <text class="s" x="434" y="143">Trend, freshness, quality status</text>
+  <text class="s" x="434" y="161">Same feature code as training,</text>
+  <text class="s" x="434" y="173">so serving cannot drift</text>
+
+  <rect class="box" x="420" y="208" width="172" height="46" rx="6"/>
+  <text class="t" x="434" y="229">Counterfactual engine</text>
+  <text class="s" x="434" y="244">Modified inputs, range checked</text>
+
+  <!-- prediction -->
+  <rect class="box-accent" x="626" y="30" width="176" height="74" rx="6"/>
+  <text class="t" x="640" y="51">Forecasters</text>
+  <text class="s" x="640" y="67">LightGBM at 30, 60, 120 min</text>
+  <text class="s" x="640" y="79">Quantile 0.10 and 0.90, widened</text>
+  <text class="s" x="640" y="91">by conformal calibration</text>
+
+  <rect class="box-accent" x="626" y="118" width="176" height="74" rx="6"/>
+  <text class="t" x="640" y="139">Excursion classifier</text>
+  <text class="s" x="640" y="155">Crossing 180 mg/dL within 60 min</text>
+  <text class="s" x="640" y="167">Isotonic calibrated probability</text>
+  <text class="s" x="640" y="179">Per prediction contributions</text>
+
+  <rect class="box" x="626" y="206" width="112" height="48" rx="6"/>
+  <text class="t" x="640" y="227">Baselines</text>
+  <text class="s" x="640" y="242">Persistence, ridge,</text>
+  <text class="s" x="640" y="252">slope rule</text>
+
+  <!-- persistence -->
+  <text class="lane" x="420" y="290">5. PERSISTENCE</text>
+  <rect class="box-store" x="420" y="302" width="382" height="62" rx="6"/>
+  <text class="t" x="434" y="323">PostgreSQL</text>
+  <text class="s" x="434" y="339">Patient profiles, every accepted observation, and every prediction with its</text>
+  <text class="s" x="434" y="351">generation timestamp, model version, uncertainty and data quality status</text>
+
+  <!-- console -->
+  <rect class="box-accent" x="845" y="30" width="165" height="224" rx="6"/>
+  <text class="t" x="859" y="51">Next.js console</text>
+  <text class="s" x="859" y="68">Patient overview</text>
+  <text class="s" x="859" y="82">Live trajectory and forecast</text>
+  <text class="s" x="859" y="96">Uncertainty band</text>
+  <text class="s" x="859" y="110">Excursion risk panel</text>
+  <text class="s" x="859" y="124">Feature contributions</text>
+  <text class="s" x="859" y="138">Data quality warnings</text>
+  <text class="s" x="859" y="152">Replay and speed controls</text>
+  <text class="s" x="859" y="166">Alert threshold control</text>
+  <text class="s" x="859" y="180">Hypothetical scenarios</text>
+  <text class="s" x="859" y="194">Prediction history, twin timeline</text>
+  <text class="s" x="859" y="208">3D twin figure</text>
+  <text class="s" x="859" y="228">Results page reads</text>
+  <text class="s" x="859" y="240">metrics.json as produced</text>
+
+  <!-- edges -->
+  <path class="edge" d="M180,56 C197,56 197,100 212,100"/>
+  <path class="edge" d="M180,121 L212,121"/>
+  <path class="edge" d="M180,186 C197,186 197,140 212,140"/>
+  <path class="edge" d="M180,251 C197,251 197,225 212,225"/>
+  <path class="edge" d="M386,119 L418,115"/>
+  <text class="elabel" x="390" y="108">accepted</text>
+  <path class="edge" d="M386,225 C400,225 404,150 418,150"/>
+  <path class="edge" d="M592,100 C608,100 610,67 624,67"/>
+  <path class="edge" d="M592,130 C608,130 610,155 624,155"/>
+  <path class="edge" d="M592,231 L624,230"/>
+  <path class="edge" d="M300,178 C300,250 320,330 418,333"/>
+  <text class="elabel" x="306" y="300">store observation</text>
+  <path class="edge" d="M770,192 L770,300"/>
+  <text class="elabel" x="776" y="240">store prediction</text>
+  <path class="edge-live" d="M802,60 C818,60 824,92 843,92"/>
+  <path class="edge" d="M790,364 C820,392 880,392 915,258"/>
+  <text class="elabel" x="800" y="392">history on load</text>
+</svg>
+
+<div class="lower">
+  <div class="legend">
+    <div class="lkey"><svg width="34" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="#4e7a7e" stroke-width="1.6"/></svg> Request or write</div>
+    <div class="lkey"><svg width="34" height="8"><line x1="0" y1="4" x2="30" y2="4" stroke="#4fd1c5" stroke-width="1.8" stroke-dasharray="5 3"/></svg> WebSocket push to the console</div>
+    <div class="lkey"><span class="swatch accent"></span> Component carrying model or validation logic</div>
+    <div class="lkey"><span class="swatch store"></span> Persistence</div>
+  </div>
+  <div class="pipeline">
+    <div class="ptitle">Pipeline for every sensor event</div>
+    <ol>
+      <li>Receive the event with units and source metadata</li>
+      <li>Validate identifier, timestamp, units and physiological range</li>
+      <li>Handle duplicate, out of order, late and missing readings</li>
+      <li>Update the rolling feature window and twin state</li>
+      <li>Run the forecasters and the excursion classifier</li>
+      <li>Persist the prediction with its generation timestamp</li>
+      <li>Publish the updated result to the console</li>
+    </ol>
+  </div>
+</div>
+<footer>
+  <span>Six components as specified in competition.txt section 11. Stack: FastAPI, LightGBM, PostgreSQL, WebSockets, Next.js, React Three Fiber, Docker Compose.</span>
+  <span>glycotwin-0.1.0</span>
+</footer>
+</body>
+</html>
